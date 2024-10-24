@@ -220,23 +220,27 @@ func deleteSecurityGroups(ctx context.Context, client *ec2.Client, clusters [][]
 			}
 
 			// Revoke all security group egress rules.
-			_, err := client.RevokeSecurityGroupEgress(ctx, &ec2.RevokeSecurityGroupEgressInput{
-				DryRun:               &dryRun,
-				GroupId:              sg.GroupId,
-				SecurityGroupRuleIds: egressIDs,
-			})
-			if errorOrFailedDryRun(err) {
-				return fmt.Errorf("failed to revoke security group egress rules: %s", err)
+			if len(egressIDs) > 0 {
+				_, err := client.RevokeSecurityGroupEgress(ctx, &ec2.RevokeSecurityGroupEgressInput{
+					DryRun:               &dryRun,
+					GroupId:              sg.GroupId,
+					SecurityGroupRuleIds: egressIDs,
+				})
+				if errorOrFailedDryRun(err) {
+					return fmt.Errorf("failed to revoke security group egress rules: %s", err)
+				}
 			}
 
 			// Revoke all security group ingress rules.
-			_, err = client.RevokeSecurityGroupIngress(ctx, &ec2.RevokeSecurityGroupIngressInput{
-				DryRun:               &dryRun,
-				GroupId:              sg.GroupId,
-				SecurityGroupRuleIds: ingressIDs,
-			})
-			if errorOrFailedDryRun(err) {
-				return fmt.Errorf("failed to revoke security group ingress rules: %s", err)
+			if len(ingressIDs) > 0 {
+				_, err := client.RevokeSecurityGroupIngress(ctx, &ec2.RevokeSecurityGroupIngressInput{
+					DryRun:               &dryRun,
+					GroupId:              sg.GroupId,
+					SecurityGroupRuleIds: ingressIDs,
+				})
+				if errorOrFailedDryRun(err) {
+					return fmt.Errorf("failed to revoke security group ingress rules: %s", err)
+				}
 			}
 		}
 
@@ -311,7 +315,7 @@ func main() {
 	}
 
 	if err := deleteSecurityGroups(ctx, client, clusters, *dryRun, *verbose); err != nil {
-		fmt.Printf("failed to delete security group: %s\n", err)
+		fmt.Printf("failed to delete security groups: %s\n", err)
 		os.Exit(1)
 	}
 }
